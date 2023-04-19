@@ -3,6 +3,19 @@
     "version": "0.0.1",
     "countriesVideoFetch": [
         "en",
-        "fr"
-    ]
+        "fr",
+        "de",
+        "jp"
+    ],
+    "pages":{
+        "en":"https://www.wikihow.com",
+        "es":"https://es.wikihow.com",
+        "pt":"https://pt.wikihow.com",
+        "it":"https://www.wikihow.it",
+        "fr":"https://fr.wikihow.com",
+        "jp":"https://www.wikihow.jp",
+        "ru":"https://ru.wikihow.com",
+        "de":"https://de.wikihow.com"
+
+    }
 }
