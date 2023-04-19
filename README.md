@@ -1,2 +1,2 @@
 # WikiHowVideoBot
- 
+This is a code which can randomly generate videos based on the sitemap of the Wikihow.com. It supoorts multiple languages, so you will be able to use it for every language of  wikihow, even multiple.
