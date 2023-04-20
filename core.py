@@ -90,6 +90,16 @@ def task(language):
     os.system(f"mv '{output}' out/{language}")
     print(output)
 
+
+if __name__ == "__main__":
+    videoFetchLanguages = config["countriesVideoFetch"]
+    for i in range(100):
+        try:
+            task("es")
+        except:
+            pass
+"""
+
 if __name__ == "__main__":
     videoFetchLanguages = config["countriesVideoFetch"]
     while True:
@@ -114,7 +124,7 @@ if __name__ == "__main__":
             p2.join()
             break
 
-
+"""
     
 
 
