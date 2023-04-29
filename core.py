@@ -1,13 +1,14 @@
 from moviepy.editor import *
 import requests
 import json
-import pyttsx3
 import random
 from colorama import Fore
 import time
 from bs4 import BeautifulSoup
 from anton import Anton
 from multiprocessing import Process 
+
+
 config = json.loads(open("configurer.json","r").read())
 wikihowInstances = config["countriesVideoFetch"]
 
@@ -93,11 +94,7 @@ def task(language):
 
 if __name__ == "__main__":
     videoFetchLanguages = config["countriesVideoFetch"]
-    for i in range(100):
-        try:
-            task("es")
-        except:
-            pass
+    task("en")
 """
 
 if __name__ == "__main__":
