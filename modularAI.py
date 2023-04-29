@@ -8,7 +8,7 @@ class modularAI:
     def summerize(self,text):
         prompt = f"""
         Hello we are a tiktok channel and we will use the text below for our video in just 5-10 seconds of it. Summerize the text below like a headline. You need to gain interest from user. Make it like first explanatory sentence and then a little description sentence. Make it short as possible with 2 sentences.
-        Use basic words for everyone to understand.
+        Use basic words for everyone to understand.Don't use URLs in your answers. Separate the title and the sentence with "-"
         The sentence:{text}
         """
         completion = openai.Completion.create(engine="text-davinci-003", prompt=prompt.strip(),temperature=0.8,max_tokens=150,top_p=0.9)
