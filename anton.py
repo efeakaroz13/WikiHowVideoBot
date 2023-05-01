@@ -9,6 +9,8 @@ from moviepy.editor import *
 from modularAI import modularAI
 from gtts import gTTS
 from modularAI import modularAI
+from PIL import ImageFont, ImageDraw, Image
+import cv2
 
 aimod = modularAI()
 
@@ -36,6 +38,50 @@ curl 'https://2poo4vxwjc.execute-api.us-east-1.amazonaws.com/prod-wps/tts?e=user
 
 
 class Anton:
+    def make_start_page(self,outputfilename,title):
+        
+
+        filename = "imageEditShorts/first.png"
+
+
+
+        image = cv2.imread(filename)
+        height = image.shape[0]
+        width = image.shape[1]
+        fontpath = "Montserrat-Regular.ttf" 
+        font = ImageFont.truetype(fontpath, 80)
+        img_pil = Image.open(filename)
+        draw = ImageDraw.Draw(img_pil)
+        counter = 0
+        if len(title)<25:
+            draw.text((30, 600),  title, font = font,fill="white")
+        else:
+            output = ""
+            for s in title.split(" "):
+                if len(output)+len(s)<25:
+                    output = output+" "+s
+                    print(output)
+                else:
+
+                    draw.text((30, 600+counter*85),  output, font = font,fill="white")
+                    output =""
+                    output = output+" "+s
+                    counter+=1
+            draw.text((30, 600+counter*85),  output, font = font,fill="white")
+            output =""
+            counter+=1
+                
+
+
+        img_pil.save(outputfilename)
+        return outputfilename
+
+
+
+
+
+
+
     def edit(self, filename, number, title):
         image = cv2.imread(filename)
         height = image.shape[0]
@@ -78,8 +124,16 @@ class Anton:
         if len(text) == 0:
             return ""
         if lang == "en":
-            text = text.replace(" ", "%20")
-            sentences = text.split(".")
+
+
+
+            sentences = text.split("-")
+            
+            if len(sentences) == 1:
+                sentences = text.split(",")
+            if len(sentences) == 1:
+                sentences = text.split(".")
+
             sounds = []
             for s in sentences:
                 if s == "":
@@ -158,9 +212,12 @@ class Anton:
 
             except:
                 pass
-
+        try:
+            title = soup.find_all("h1")[0].get_text()
+        except:
+            title = ""
         idofthething = wikihowurl.split("/")[-1].split(".")[0]
-        data = {"output": images, "id": idofthething}
+        data = {"output": images, "id": idofthething,"title":title}
 
         return data
 
@@ -172,6 +229,28 @@ class Anton:
             raise ValueError("Please pass the data returned from scraper(<url>) ")
         videooutput = []
         filenamer = []
+        stringthing = ["A", "B", "ANT", "ON", "AD", "ASDF"]
+
+
+        #START IMAGE
+        startImage = self.make_start_page(f"start{random.randint(1,123435345345)}.png",data["title"])
+        start_soundfile = self.speak(data["title"], lang=lang)
+        outputfilename = f"{random.choice(stringthing)}{random.randint(1,234534554645645)}{random.choice(stringthing)}{random.choice(stringthing)}{random.choice(stringthing)}{random.choice(stringthing)}"
+        os.system(
+            f"""ffmpeg -loop 1 -f image2 -i {startImage} -i {start_soundfile}  -vf fps=30 -pix_fmt yuv420p -vcodec libx264 -shortest {outputfilename}.mp4"""
+        )
+        imgqts.append(startImage)
+        audioclip = AudioFileClip(start_soundfile)
+        soundduration = audioclip.duration
+        os.system(f"rm {start_soundfile} ")
+        os.system(f"rm {startImage} ")
+        clip = VideoFileClip(outputfilename + ".mp4")
+        clip = clip.subclip(0, soundduration)
+        videooutput.append(clip)
+        filenamer.append(outputfilename)
+        #END OF START IMAGE
+
+
         for d in data["output"]:
             text = d["text"]
             image = d["image"]
@@ -189,16 +268,16 @@ class Anton:
                 except:
                     pass 
 
-            print(text)
-            print("Status OK")
+
             soundfile = self.speak(text, lang=lang)
+            print(soundfile)
             # Download the image
-            page = requests.get(image, stream=True)
+            page = requests.get(image.replace("460px","1080px"), stream=True)
             filenameofit = image.split("/")[-1]
 
             with open(filenameofit, "wb") as f:
                 f.write(page.content)
-            stringthing = ["A", "B", "ANT", "ON", "AD", "ASDF"]
+            
 
             img = cv2.imread(filenameofit, cv2.IMREAD_UNCHANGED)
 
