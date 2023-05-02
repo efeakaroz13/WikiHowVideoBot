@@ -76,20 +76,24 @@ def task(language):
     print(selection)
     myanton = Anton()
     outdata = myanton.scraper(selection)
-    output = myanton.makeclip(outdata, lang=language)["output"]
-    try:
-        os.listdir("out")
-    except:
-        os.system("mkdir out")
+
+    for d in outdata:
+        print(json.dumps(d,indent=4))
+
+        output = myanton.makeclip(d, lang=language)["output"]
+        try:
+            os.listdir("out")
+        except:
+            os.system("mkdir out")
 
 
-    try:
-        os.listdir("out/"+language)
-    except:
-        os.system(f"mkdir out/{language}")
+        try:
+            os.listdir("out/"+language)
+        except:
+            os.system(f"mkdir out/{language}")
 
-    os.system(f"mv '{output}' out/{language}")
-    print(output)
+        os.system(f"mv '{output}' out/{language}")
+        print(output)
 
 
 if __name__ == "__main__":

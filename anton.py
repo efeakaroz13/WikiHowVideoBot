@@ -82,7 +82,13 @@ class Anton:
 
 
 
-    def edit(self, filename, number, title):
+    def edit(self, image_top_name, number, title):
+        title = title.replace("-","")
+        if number != None:
+            title = str(number)+" - "+title
+        else:
+            pass 
+        """
         image = cv2.imread(filename)
         height = image.shape[0]
         width = image.shape[1]
@@ -116,31 +122,95 @@ class Anton:
         )
 
         cv2.imwrite(filename, image)
+        """
+        filename = random.choice(["imageEditShorts/t1.png","imageEditShorts/t2.png"])
+
+
+
+
+        image = cv2.imread(filename)
+        height = image.shape[0]
+        width = image.shape[1]
+        fontpath = "Montserrat-Regular.ttf" 
+        font = ImageFont.truetype(fontpath, 75)
+        img_pil = Image.open(filename).convert("RGB")
+        draw = ImageDraw.Draw(img_pil)
+        counter = 0
+        if len(title)<25:
+            draw.text((30, 900),  title, font = font,fill="white")
+        else:
+            output = ""
+            for s in title.split(" "):
+                if len(output)+len(s)<25:
+                    output = output+" "+s
+                    print(output)
+                else:
+
+                    draw.text((30, 900+counter*85),  output, font = font,fill="white")
+                    output =""
+                    output = output+" "+s
+                    counter+=1
+            draw.text((30, 900+counter*85),  output, font = font,fill="white")
+            output =""
+            counter+=1
+                
+
+
+
+
+        img = Image.open(image_top_name, 'r').convert("RGB")
+        img_w, img_h = img.size
+
+        bg_w, bg_h = img_pil.size
+        offset = ((bg_w - img_w) // 2, 0)
+        img_pil.paste(img, offset)
+        img_pil.save(image_top_name)
+
 
     def __init__(self):
         self.a = ""
 
     def speak(self, text, lang="en"):
+
         if len(text) == 0:
             return ""
+        
+        totext = ""
+        splitter = text.split(" ")
+        for s in splitter:
+            if "http" in s:
+                continue
+            else:
+                totext = totext+s+" " 
+        text=totext
         if lang == "en":
 
 
 
-            sentences = text.split("-")
+            sentences = text.split(".")
+            
             
             if len(sentences) == 1:
                 sentences = text.split(",")
             if len(sentences) == 1:
-                sentences = text.split(".")
+                sentences = text.split("-")
 
             sounds = []
             for s in sentences:
+                s = s.replace("&","%26").replace("?","%3F")
                 if s == "":
                     continue
+                s = s.replace("#"," ")
+                if str(s).strip() == "":
+                    continue
                 sound = requests.get(
-                    f"https://api.genny.lovo.ai/v1/tts?text={s}&isDefault=false&speaker=638088f9d72424f0cfbdbe59&speakerStyle=638088f9d72424f0cfbdbe5a"
+                    f"https://api.genny.lovo.ai/v1/tts?text={s}&isDefault=false&speaker=638088f9d72424f0cfbdbe59&speakerStyle=638088f9d72424f0cfbdbe5a",
+                    headers={
+                        "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+                        "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+                    }
                 )
+                print(sound.url)
                 try:
                     print(json.dumps(json.loads(sound.content),indent=4))
                     continue
@@ -167,59 +237,83 @@ class Anton:
 
     def scraper(self, wikihowurl):
         images = []
+
         page = requests.get(
             wikihowurl,
             headers={"User-Agent": "Mozilla/5.0 Macintel Chrome(107.0.23.23)"},
         )
 
         soup = BeautifulSoup(page.content, "html.parser")
-        alllinks = soup.find_all("a", {"class": "ts_trustworthy"})
-        for a in alllinks:
-            a.parent.parent.decompose()
-        print(len(alllinks))
-
-        try:
-            steps_first = soup.find_all("div",{"class":"steps_first"})[0]
-            allimages = steps_first.find_all("a", {"class": "image"})
-        except:
-            allimages = soup.find_all("a", {"class": "image"})
-
-        for a in allimages:
-            # print(a)
-            try:
-                src = a.find_all("img")[0].get("data-src")
-                src.split("https")[1]
-
-                step = a.parent.parent.find_all("div", {"class": "step"})[0]
-                step_num = int(
-                    step.parent.find_all("div", {"class": "step_num"})[0].get_text()
-                )
-                title = step.find_all("b", {"class": "whb"})[0].get_text()
-                text = step.get_text()
-                appendit = True
-                for i in images:
-                    if i["text"] == text:
-                        appendit = False
-
-                data1 = {
-                    "image": src,
-                    "text": text,
-                    "step_num": step_num,
-                    "title": title,
-                }
-                if appendit == True:
-                    images.append(data1)
-
-            except:
-                pass
         try:
             title = soup.find_all("h1")[0].get_text()
         except:
             title = ""
-        idofthething = wikihowurl.split("/")[-1].split(".")[0]
-        data = {"output": images, "id": idofthething,"title":title}
 
-        return data
+        alllinks = soup.find_all("a", {"class": "ts_trustworthy"})
+        for a in alllinks:
+            a.parent.parent.decompose()
+
+        idofthething = wikihowurl.split("/")[-1].split(".")[0]
+        try:
+            steps_first = soup.find_all("div",{"class":"steps"})
+            
+
+            for s in steps_first:
+               
+                allimages = s.find_all("a", {"class": "image"})
+                print(len(allimages))
+                locimg = []
+                for a in allimages:
+                    # print(a)
+                    try:
+                        src = a.find_all("img")[0].get("data-src")
+                        src.split("https")[1]
+
+                        step = a.parent.parent.find_all("div", {"class": "step"})[0]
+                        try:
+                            step_num = int(
+                                step.parent.find_all("div", {"class": "step_num"})[0].get_text()
+                            )
+                        except:
+                            step_num = None
+                        title2 = step.find_all("b", {"class": "whb"})[0].get_text()
+                        text = step.get_text()
+                        appendit = True
+                        for i in locimg:
+                            if i["text"] == text:
+                                appendit = False
+
+                        data1 = {
+                            "image": src,
+                            "text": text,
+                            "step_num": step_num,
+                            "title": title2,
+                        }
+                        if appendit == True:
+                            locimg.append(data1)
+
+                    except Exception as e:
+                        pass
+
+                
+                images.append({"output": locimg, "id": idofthething,"title":title+f" Part #{steps_first.index(s)+1}"})
+        except Exception as e:
+            allimages = soup.find_all("a", {"class": "image"})
+
+        
+        
+        
+        #data = {"output": images, "id": idofthething,"title":title}
+
+        return images
+
+
+
+
+
+
+
+
 
     def makeclip(self, data, lang="en"):
         imgqts = []
@@ -240,6 +334,7 @@ class Anton:
             f"""ffmpeg -loop 1 -f image2 -i {startImage} -i {start_soundfile}  -vf fps=30 -pix_fmt yuv420p -vcodec libx264 -shortest {outputfilename}.mp4"""
         )
         imgqts.append(startImage)
+
         audioclip = AudioFileClip(start_soundfile)
         soundduration = audioclip.duration
         os.system(f"rm {start_soundfile} ")
@@ -253,26 +348,20 @@ class Anton:
 
         for d in data["output"]:
             text = d["text"]
+            text=text.replace("Research source","").replace("X\n","").replace("\n","")
             image = d["image"]
             title = d["title"]
             step_num = d["step_num"]
             print("Summerising")
             print(text)
             text = aimod.summerize(text)
-            try:
-                text.split(" - ")[1]
-                title = text.split(" - ")[0]
-            except:
-                try:
-                    title = text.split(":")[0]
-                except:
-                    pass 
+            
 
 
             soundfile = self.speak(text, lang=lang)
             print(soundfile)
             # Download the image
-            page = requests.get(image.replace("460px","1080px"), stream=True)
+            page = requests.get(image.replace("460","550"), stream=True)
             filenameofit = image.split("/")[-1]
 
             with open(filenameofit, "wb") as f:
@@ -304,6 +393,7 @@ class Anton:
                 ffmpeg -loop 1 -i {filenameofit} -i {soundfile} -c:v libx264 -tune stillimage -c:a aac -b:a 192k -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)',format=yuv420p" -shortest -movflags +faststart {outputfilename}.mp4
                 ffmpeg -loop 1 -f image2 -i {filenameofit} -i {soundfile} -vf fps=30 -pix_fmt yuv420p -vcodec libx264 -shortest {outputfilename}.mp4
             """
+            print(soundfile)
             audioclip = AudioFileClip(soundfile)
             soundduration = audioclip.duration
 
@@ -322,7 +412,7 @@ class Anton:
         for image in imgqts:
             os.system(f"rm {image}")
         final = concatenate_videoclips(videooutput)
-        theoutputfilename = data["id"] + ".mp4"
+        theoutputfilename = data["title"] + ".mp4"
 
         final.write_videofile(
             theoutputfilename,
@@ -340,6 +430,6 @@ class Anton:
 
 if __name__ == "__main__":
     myanton = Anton()
-    outdata = myanton.scraper("https://www.wikihow.com/Increase-Your-Brain-Power")
+    outdata = myanton.scraper("https://www.wikihow.com/7-Signs-of-a-Toxic-Person")
     print(json.dumps(outdata,indent=4))
     #myanton.makeclip(outdata)

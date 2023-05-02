@@ -6,10 +6,17 @@ class modularAI:
         self.engines = openai.Engine.list()
 
     def summerize(self,text):
+        totext = ""
+        splitter = text.split(" ")
+        for s in splitter:
+            if "http" in s:
+                continue
+            else:
+                totext = totext+s+" " 
+            
         prompt = f"""
-        Hello we are a tiktok channel and we will use the text below for our video in just 5-10 seconds of it. Summerize the text below like a headline. You need to gain interest from user. Make it like first explanatory sentence and then a little description sentence. Make it short as possible with 2 sentences.
-        Use basic words for everyone to understand.Don't use URLs in your answers. Separate the title and the sentence with "-"
-        The sentence:{text}
+        Hello, we gave you a text down below, summerise it with 2 sentences for a tiktok video, make it short as possible. Don't use URLs in any exceptions. Sentence 1 should be like a headline and sentence 2 should be explanatory. Make correct punctiations.Please don't mention the instructions we gave you. Every sentence should be than 180 characters and you can add more sentences other than 2.
+        The sentence:{totext}
         """
         completion = openai.Completion.create(engine="text-davinci-003", prompt=prompt.strip(),temperature=0.8,max_tokens=150,top_p=0.9)
         text=completion["choices"][0]["text"].strip().replace("\n","")
